@@ -8,3 +8,7 @@
 .task__text {
 	margin-left: 5px;
 }
+
+.task--inactive {
+	text-decoration: line-through;
+}

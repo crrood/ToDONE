@@ -20,6 +20,24 @@ const sampleTaskList = {
 const sampleTaskList2 = {
 	"1": {
 		"id": "1",
+		"text": "Task 1",
+		"active": true
+	},
+	"2": {
+		"id": "2",
+		"text": "Task 2",
+		"active": false
+	},
+	"3": {
+		"id": "3",
+		"text": "Task 3",
+		"active": false
+	}
+};
+
+const sampleTaskListShort = {
+	"1": {
+		"id": "1",
 		"text": "New task", 
 		"active": true
 	}
@@ -31,10 +49,6 @@ function List() {
 	// useState hook to store taskList
 	const [taskList, setTaskList] = React.useState(sampleTaskList);
 
-	React.useEffect(() => {
-		console.log("List useEffect");
-	});
-
 	// iterate through taskList to create list HTML
 	console.log("rendering taskList:");
 	console.log(taskList);
@@ -42,40 +56,52 @@ function List() {
 	let task;
 	for (let taskId in taskList) {
 		task = taskList[taskId];
-		if (task.active) {
-			taskListHtml.push(
-				<Task 
-					key={ taskId } 
-					taskId={ taskId } 
-					taskList={ taskList } 
-					setTaskList={ setTaskList }>
-				</Task>
-			);
-		}
+		taskListHtml.push(
+			<Task 
+				key={ taskId }
+				taskId={ taskId }
+				taskList={ taskList }
+				setTaskList={ setTaskList }>
+			</Task>
+		);
 	}
 
 	// render component
 	return (
 		<div className="task-list">
 			{ taskListHtml }
-			<button onClick={ () => setTaskList(sampleTaskList2) }>reset</button>
 		</div>
 	);
 }
 
 // individual task
 function Task(props) {
-	React.useEffect(() => {
-		console.log("Task useEffect");
-	});
 
-	const taskObject = props.taskList[props.taskId]
+	const taskObject = props.taskList[props.taskId];
+
+	function toggleTaskActive() {
+		const newTaskObject = {
+			...taskObject,
+			"active": !taskObject.active
+		}
+
+		// why is this required?
+		// seems like react doesn't render unless a new object is assigned
+		const newTaskList = Object.assign({}, props.taskList);
+
+		newTaskList[props.taskId] = newTaskObject;
+
+		props.setTaskList(newTaskList);
+	}
+
+	const className = "task " + (taskObject.active ? "task--active" : "task--inactive");
 	return (
-		<div className="task">
+		<div className={ className }>
 			<input 
 				type="checkbox" 
-				className="task__checkbox" 
-				onClick={ () => props.setTaskList(toggleTaskActive(props.taskList, props.taskId)) }
+				className="task__checkbox"
+				checked={ !taskObject.active }
+				onClick={ toggleTaskActive }
 			/>
 			<span 
 				className="task__text" 
@@ -84,19 +110,6 @@ function Task(props) {
 			</span>
 		</div>
 	);
-}
-
-function toggleTaskActive(taskList, taskId) {
-	const newTaskObject = {
-		...taskList[taskId],
-		"active": !taskList[taskId].active
-	}
-
-	taskList[taskId] = newTaskObject;
-
-	console.log(taskList);
-
-	return taskList;
 }
 
 function taskCompleted(props) {
