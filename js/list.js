@@ -3,45 +3,19 @@ const sampleTaskList = {
 	"1": {
 		"id": "1",
 		"text": "Task 1",
-		"active": true
+		"completed": false
 	},
 	"2": {
 		"id": "2",
 		"text": "Task 2",
-		"active": true
+		"completed": false
 	},
 	"3": {
 		"id": "3",
 		"text": "Task 3",
-		"active": false
+		"completed": true
 	}
 };
-
-const sampleTaskList2 = {
-	"1": {
-		"id": "1",
-		"text": "Task 1",
-		"active": true
-	},
-	"2": {
-		"id": "2",
-		"text": "Task 2",
-		"active": false
-	},
-	"3": {
-		"id": "3",
-		"text": "Task 3",
-		"active": false
-	}
-};
-
-const sampleTaskListShort = {
-	"1": {
-		"id": "1",
-		"text": "New task", 
-		"active": true
-	}
-}
 
 // list of tasks
 function List() {
@@ -49,9 +23,10 @@ function List() {
 	// useState hook to store taskList
 	const [taskList, setTaskList] = React.useState(sampleTaskList);
 
-	// iterate through taskList to create list HTML
 	console.log("rendering taskList:");
 	console.log(taskList);
+
+	// iterate through taskList to create list HTML
 	const taskListHtml = [];
 	let task;
 	for (let taskId in taskList) {
@@ -61,8 +36,8 @@ function List() {
 				key={ taskId }
 				taskId={ taskId }
 				taskList={ taskList }
-				setTaskList={ setTaskList }>
-			</Task>
+				setTaskList={ setTaskList }
+			></Task>
 		);
 	}
 
@@ -77,58 +52,92 @@ function List() {
 // individual task
 function Task(props) {
 
-	const taskObject = props.taskList[props.taskId];
+	// whether the user is currently editing the text of the task
+	const [editable, setEditable] = React.useState(false);
 
-	function toggleTaskActive() {
-		const newTaskObject = {
-			...taskObject,
-			"active": !taskObject.active
+	// data received from DB
+	const taskData = props.taskList[props.taskId];
+
+	// toggles whether a task has been completed
+	function toggleTaskCompleted() {
+		const newtaskData = {
+			...taskData,
+			"completed": taskData.completed
 		}
 
-		// why is this required?
-		// seems like react doesn't render unless a new object is assigned
+		// why is Object.assign required?
+		// seems like react doesn't render unless a fresh reference is created
 		const newTaskList = Object.assign({}, props.taskList);
 
-		newTaskList[props.taskId] = newTaskObject;
+		newTaskList[props.taskId] = newtaskData;
 
 		props.setTaskList(newTaskList);
 	}
 
-	const className = "task " + (taskObject.active ? "task--active" : "task--inactive");
+	// change static text to text input
+	function toggleEditable(ref) {
+		setEditable(!editable);
+	}
+
+	// render element
+	const className = "task " + (taskData.completed ? "task--completed" : "");
 	return (
 		<div className={ className }>
 			<input 
 				type="checkbox" 
 				className="task__checkbox"
-				checked={ !taskObject.active }
-				onClick={ toggleTaskActive }
+				checked={ taskData.completed }
+				onChange={ toggleTaskCompleted }
 			/>
-			<span 
-				className="task__text" 
-				onClick={ (e) => editText(taskObject, e) }>
-				{ taskObject.text }
-			</span>
+			<TaskText 
+				editable={ editable }
+				text={ taskData.text }
+				toggleEditable={ toggleEditable }
+			></TaskText>
 		</div>
 	);
 }
 
-function taskCompleted(props) {
-	const newTaskObject = {
-		...props.taskList[props.taskId],
-		"active": !props.taskList[props.taskId].active
+function TaskText(props) {
+
+	// text to diplay for task
+	const [text, setText] = React.useState(props.text);
+
+	// reference to DOM element for setting focus when editing text
+	const [textInputRef, setTextInputRef] = React.useState(React.createRef);
+
+	// detect rendering and focus text input when applicable
+	React.useEffect(() => {
+		if (props.editable) {
+			textInputRef.current.focus();
+		}
+	})
+
+	// render element
+	if (props.editable) {
+		return (
+			<input 
+				type="text" 
+				className="task__text--editable" 
+				onChange={ e => setText(e.target.value) }
+				onBlur={ e => props.toggleEditable(React.createRef()) }
+				ref={ textInputRef }
+				value={ text }
+			/>
+		)
 	}
-	const newTaskList = props.taskList;
-	newTaskList[props.taskId] = newTaskObject;
-
-	props.setTaskList(newTaskList);
-
-	console.log("taskCompleted");
+	else {
+		return (
+			<span 
+				className="task__text"
+				onClick={ props.toggleEditable }
+			>
+					{ text }
+			</span>
+		);
+	}
 }
 
-function editText(taskObject, event) {
-	console.log("editText");
-	console.log(taskObject);
-}
-
+// Add to page
 const domContainer = document.querySelector("#listContainer");
 ReactDOM.render(React.createElement(List), domContainer);

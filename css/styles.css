@@ -9,6 +9,6 @@
 	margin-left: 5px;
 }
 
-.task--inactive {
+.task--completed {
 	text-decoration: line-through;
 }
