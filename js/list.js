@@ -62,7 +62,7 @@ function Task(props) {
 	function toggleTaskCompleted() {
 		const newtaskData = {
 			...taskData,
-			"completed": taskData.completed
+			"completed": !taskData.completed
 		}
 
 		// why is Object.assign required?
@@ -118,7 +118,7 @@ function TaskText(props) {
 		return (
 			<input 
 				type="text" 
-				className="task__text--editable" 
+				className="task__text task__text--editable" 
 				onChange={ e => setText(e.target.value) }
 				onBlur={ e => props.toggleEditable(React.createRef()) }
 				ref={ textInputRef }
